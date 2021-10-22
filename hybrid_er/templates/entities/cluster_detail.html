@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+{% load entities_extras %}
+
+{% block title %}Entity{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'css/vendor/jquery.dataTables.min.css' %}">
+<style>
+  body {
+    padding-bottom: 5em;
+  }
+
+  td:nth-child(1), th:nth-child(1),
+  td:nth-child(3), th:nth-child(3),
+  td:nth-child(4), th:nth-child(4),
+  td:nth-child(5), th:nth-child(5)
+  {
+    text-align:center;
+  }
+
+  td.details-control {
+      background: url({% static 'images/details_open.png' %}) no-repeat center center;
+      cursor: pointer;
+  }
+  tr.shown td.details-control {
+      background: url({% static 'images/details_close.png' %}) no-repeat center center;
+  }
+
+  .innerTable td:nth-child(3) {
+    text-align: left;
+  }
+
+  .inner-form {
+    text-align: left;
+    padding: 1em;
+    background: rgb(246, 246, 246);
+  }
+
+  .inner-better {
+    margin-top: 1em;
+  }
+
+  .submit-buttons {
+    text-align: center;
+  }
+
+  .submit-buttons button {
+    width: 33%;
+    margin-top: 1.5em;
+  }
+
+  table.dataTable thead th {
+    padding-left: 10px;
+  }
+
+  .has-radio span {
+    cursor: pointer;
+    padding: .5rem 1.25rem;
+  }
+
+  .tr-radio {
+    cursor: pointer;
+  }
+
+  input {
+    cursor: pointer;
+  }
+
+  table.dataTable tbody tr.selected-row,
+  table.dataTable tbody tr.selected-row.odd,
+  table.dataTable tbody tr.selected-inner-row {
+    background: #dcedf4;
+  }
+
+  table.dataTable tbody tr.selected-row:hover,
+  table.dataTable tbody tr.selected-row.odd:hover,
+  table.dataTable tbody tr.selected-inner-row:hover {
+    background: #c3d4da;
+  }
+</style>
+{% endblock extrahead %}
+
+{% block content %}
+<form action="{% url 'entities:detail' object.cluster %}" method="post">
+
+{% csrf_token %}
+{{ formset.management_form }}
+
+<!-- the main form table -->
+
+<table id="candidateTable" class="display">
+  <thead>
+    <tr>
+      <th>Canonical</th>
+      <th>Text</th>
+      <th>Correct</th>
+      <th>Incorrect</th>
+      <th>IDK</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for candidate in candidates %}
+          {% with canon_form.candidate|lookup:forloop.counter0 as radio %}
+      <tr data-candidate-pk="{{ candidate.candidate.pk }}" class="{% if radio.data.selected %}selected-row{% endif %}">
+        <td class="has-radio canonical">
+              <span class="radio">{{ radio.tag }}</span>
+          {% endwith %}
+        </td>
+        <td>
+          <span>{{ candidate.candidate.text }}</span>
+        </td>
+
+        {% for radio in candidate.form.vote %}
+
+          <td class="has-radio{% if radio.data.value == 'N' %} no-td{% endif %}">
+            <span class="radio">{{ radio.tag }}</span>
+          </td>
+
+        {% endfor %}
+        <td>
+        </td>
+
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- the inner forms which JS will move around -->
+<div id="hidden-forms" style="display: none">
+  {% for candidate in candidates %}
+    <div class="hide">
+      {{ candidate.form.candidate }}
+      {{ candidate.form.id }}
+    </div>
+    <div id="candidate-clusters-{{ candidate.candidate.pk }}" class="inner-form">
+      <div class="inner-better">
+        <p>Choose a better cluster for <strong>{{ candidate.candidate.text }}</strong>:</p>
+        <table class="innerTable" cellpadding="5" cellspacing="0" border="0" style="margin-bottom:50px">
+          <thead>
+            <td>Best</td>
+            <td>Score</td>
+            <td>Cluster</td>
+          </thead><tbody>
+            {% for cluster in candidate.clusters %}
+              {% with candidate.form.better_cluster|lookup:forloop.counter as radio %}
+              <tr class="tr-radio{% if radio.data.selected %} selected-inner-row{% endif %}">
+                <td>
+                    {% include "entities/inner.html" %}
+                </td>
+                <td>{{ cluster.score }}</td>
+                <td>{{ cluster.cluster.text }}</td>
+              </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="submit-buttons">
+  <div>
+    <button id="submit" type="submit" class="btn btn-primary">Submit</button>
+  </div>
+  <div>
+    <button id="bad-custer" type="button" class="btn btn-outline-secondary" data-toggle="collapse" data-target="#spurious-desc" aria-expanded="false" aria-controls="spurious-desc">Spurious Cluster</button>
+  </div>
+</div>
+
+<div class="collapse" id="spurious-desc">
+  <div class="card card-body">
+    <textarea name="spurious" id="spurious-text" cols="30" rows="10" placeholder="Describe problem with this cluster..."></textarea>
+  </div>
+</div>
+
+</form>
+{% endblock content %}
+
+{% block extrajavascript %}
+  <script src="{% static 'js/vendor/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'js/entities.js' %}"></script>
+{% endblock extrajavascript %}
