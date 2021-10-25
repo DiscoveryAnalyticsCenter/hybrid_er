@@ -29,6 +29,13 @@ docker-compose -f local.yml run --rm django python manage.py populate_scores dat
 ```
 
 
+## Export results
+
+```
+docker-compose -f local.yml run --rm django python manage.py export_results data/outfile.csv
+```
+
+
 ## Run server
 
 Set environment in .envs/.local
