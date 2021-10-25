@@ -50,7 +50,6 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
             )
         ).first()
 
-        print("Send them to {}".format(next_c))
         return HttpResponseRedirect(reverse("entities:detail", kwargs={"slug": next_c}))
 
     def get_context_data(self, **kwargs):
