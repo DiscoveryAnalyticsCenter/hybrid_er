@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.forms import modelformset_factory
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -10,7 +11,6 @@ from django.views.generic.list import ListView
 
 from .models import Cluster, Candidate, Canonical, Result, Score
 from .forms import CanonicalForm, ResultForm
-
 
 
 class ClusterDetailView(LoginRequiredMixin, DetailView):
@@ -39,7 +39,19 @@ class ClusterDetailView(LoginRequiredMixin, DetailView):
         else:
             print(formset.errors)
 
-        return HttpResponseRedirect(reverse("entities:detail", kwargs={"slug": self.object.cluster}))
+        next_c = Cluster.objects.filter(
+            ~Q(
+                cluster__in=Result.objects.filter(user=u).distinct(
+                    "candidate__cluster"
+                ).values_list(
+                    "candidate__cluster__cluster",
+                    flat=True
+                )
+            )
+        ).first()
+
+        print("Send them to {}".format(next_c))
+        return HttpResponseRedirect(reverse("entities:detail", kwargs={"slug": next_c}))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -129,9 +141,14 @@ class ClusterListView(LoginRequiredMixin, ListView):
         # queryset = queryset.filter(user=self.request.user)
         return queryset
 
-    # paginate_by = 100  # if pagination is desired
-
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['now'] = timezone.now()
-    #     return context
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["results_list"] = Result.objects.filter(
+                user=self.request.user
+            ).distinct(
+                "candidate__cluster"
+            ).values_list(
+                "candidate__cluster__cluster",
+                flat=True
+            )
+        return context

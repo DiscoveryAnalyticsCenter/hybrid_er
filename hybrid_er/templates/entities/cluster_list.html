@@ -4,12 +4,84 @@
 {% block title %}Entity Lists{% endblock %}
 
 {% block extrahead %}
+<style>
+  tr {
+    cursor: pointer;
+  }
+  tr a {
+    text-decoration: none;
+    color: black;
+  }
+  tr a:hover {
+    text-decoration: none;
+    color: black;
+  }
+</style>
 {% endblock extrahead %}
 
 {% block content %}
 
+<div class="my-4">
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="todo-tab" data-toggle="tab" href="#todo" role="tab" aria-controls="todo" aria-selected="true">Todo</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="done-tab" data-toggle="tab" href="#done" role="tab" aria-controls="done" aria-selected="false">Done</a>
+  </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+  <div class="mt-4 tab-pane fade show active" id="todo" role="tabpanel" aria-labelledby="todo-tab">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Cluster</th>
+          <th>Text</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cluster in object_list %}
+          {% if cluster.cluster not in results_list %}
+          <tr data-href="{% url 'entities:detail' cluster.cluster %}">
+            <th><a href="{% url 'entities:detail' cluster.cluster %}">{{ cluster.cluster }}</a></th>
+            <td><a href="{% url 'entities:detail' cluster.cluster %}">{{ cluster.text }}</a></td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4 tab-pane fade" id="done" role="tabpanel" aria-labelledby="done-tab">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>Cluster</th>
+          <th>Text</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cluster in object_list %}
+          {% if cluster.cluster in results_list %}
+          <tr data-href="{% url 'entities:detail' cluster.cluster %}">
+            <th><a href="{% url 'entities:detail' cluster.cluster %}">{{ cluster.cluster }}</a></th>
+            <td><a href="{% url 'entities:detail' cluster.cluster %}">{{ cluster.text }}</a></td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
 {% endblock content %}
 
 {% block extrajavascript %}
-  <script src="{% static 'js/entities.js' %}"></script>
+  <script>
+    $(document).ready(function () {
+        $("tr").on("click", function () {
+          window.location = $(this).data("href");
+        });
+    });
+  </script>
 {% endblock extrajavascript %}

@@ -147,7 +147,7 @@
               {% with candidate.form.better_cluster|lookup:forloop.counter as radio %}
               <tr class="tr-radio{% if radio.data.selected %} selected-inner-row{% endif %}">
                 <td>
-                    {% include "entities/inner.html" %}
+                    {{ radio.tag }}
                 </td>
                 <td>{{ cluster.score }}</td>
                 <td>{{ cluster.cluster.text }}</td>
@@ -165,9 +165,9 @@
   <div>
     <button id="submit" type="submit" class="btn btn-primary">Submit</button>
   </div>
-  <div>
+  <!--<div>
     <button id="bad-custer" type="button" class="btn btn-outline-secondary" data-toggle="collapse" data-target="#spurious-desc" aria-expanded="false" aria-controls="spurious-desc">Spurious Cluster</button>
-  </div>
+  </div>-->
 </div>
 
 <div class="collapse" id="spurious-desc">
